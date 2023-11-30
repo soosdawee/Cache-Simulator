@@ -7,13 +7,29 @@ import java.awt.event.ActionListener;
 public class IntroView extends JFrame {
     private JButton startButton;
     private JTextField setNumber;
+    private JTextField cacheSize;
+    private JTextField blockSize;
     private JComboBox<String> chooseWrite;
+    private JComboBox<String> chooseReplacement;
     String[] comboOptions = {"Write-through", "Write-back"};
+    String[] comboReplacement = {"FIFO", "LRU"};
 
     public IntroView() {
-        this.setBounds(100, 100, 500, 400);
+        this.setBounds(100, 100, 500, 550);
         this.setDefaultCloseOperation(EXIT_ON_CLOSE);
         this.getContentPane().setLayout(null);
+
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (UnsupportedLookAndFeelException e) {
+            throw new RuntimeException(e);
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (InstantiationException e) {
+            throw new RuntimeException(e);
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
 
         JLabel titleLabel = new JLabel("Cache simulator");
         titleLabel.setFont(new Font("Tahoma", Font.BOLD, 20));
@@ -27,26 +43,53 @@ public class IntroView extends JFrame {
 
         startButton = new JButton("Start simulation");
         startButton.setFont(new Font("Tahoma", Font.PLAIN, 12));
-        startButton.setBounds(175, 300, 150, 21);
+        startButton.setBounds(175, 395, 150, 21);
         this.getContentPane().add(startButton);
 
         setNumber = new JTextField();
-        setNumber.setBounds(300, 126, 20, 20);
+        setNumber.setBounds(300, 201, 40, 20);
         this.getContentPane().add(setNumber);
 
         JLabel numberLabel = new JLabel("Number of sets:");
         numberLabel.setFont(new Font("Tahoma", Font.PLAIN, 12));
-        numberLabel.setBounds(180, 125, 150, 20);
+        numberLabel.setBounds(180, 200, 150, 20);
         this.getContentPane().add(numberLabel);
+
+        cacheSize = new JTextField();
+        cacheSize.setBounds(300, 126, 40, 20);
+        this.getContentPane().add(cacheSize);
+
+        JLabel sizeLabel = new JLabel("Size of the cache:");
+        sizeLabel.setFont(new Font("Tahoma", Font.PLAIN, 12));
+        sizeLabel.setBounds(180, 125, 150, 20);
+        this.getContentPane().add(sizeLabel);
+
+        blockSize = new JTextField();
+        blockSize.setBounds(300, 163, 40, 20);
+        this.getContentPane().add(blockSize);
+
+        JLabel blockLabel = new JLabel("Size of blocks:");
+        blockLabel.setFont(new Font("Tahoma", Font.PLAIN, 12));
+        blockLabel.setBounds(180, 163, 150, 20);
+        this.getContentPane().add(blockLabel);
 
         JLabel mechanismLabel = new JLabel("Mechanism for write operation:");
         mechanismLabel.setFont(new Font("Tahoma", Font.PLAIN, 12));
-        mechanismLabel.setBounds(170, 175, 200, 40);
+        mechanismLabel.setBounds(170, 230, 200, 40);
         this.getContentPane().add(mechanismLabel);
 
         chooseWrite = new JComboBox<>(comboOptions);
-        chooseWrite.setBounds(190, 230, 125, 25);
+        chooseWrite.setBounds(190, 270, 125, 25);
         this.getContentPane().add(chooseWrite);
+
+        JLabel replacementLabel = new JLabel("Mechanism for replacement:");
+        replacementLabel.setFont(new Font("Tahoma", Font.PLAIN, 12));
+        replacementLabel.setBounds(170, 305, 200, 40);
+        this.getContentPane().add(replacementLabel);
+
+        chooseReplacement = new JComboBox<>(comboReplacement);
+        chooseReplacement.setBounds(190, 345, 125, 25);
+        this.getContentPane().add(chooseReplacement);
 
         this.setVisible(true);
     }

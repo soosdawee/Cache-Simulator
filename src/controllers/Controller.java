@@ -1,10 +1,13 @@
 package controllers;
 
+import utils.Parser;
 import views.CacheView;
 import views.IntroView;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.SQLOutput;
+import java.util.List;
 
 public class Controller {
     private CacheView cacheView;
@@ -17,8 +20,10 @@ public class Controller {
         this.introView.addStartListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                System.out.println("fasz");
                 introView.setVisible(false);
+                //TODO: get values from introView and build the initial setup of the tables
+                List<String[]> controls = Parser.parseFile("input.txt");
+
                 cacheView.setVisible(true);
             }
         });
