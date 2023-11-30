@@ -97,4 +97,28 @@ public class IntroView extends JFrame {
     public void addStartListener(ActionListener action) {
         startButton.addActionListener(action);
     }
+
+    public Integer getSetNumber() {
+        return Integer.parseInt(setNumber.getText());
+    }
+
+    public Integer getCacheSize() {
+        return Integer.parseInt(cacheSize.getText());
+    }
+
+    public Integer getBlockSize() {
+        return Integer.parseInt(blockSize.getText());
+    }
+
+    public String getChooseWrite() {
+        return chooseWrite.getSelectedItem().toString();
+    }
+
+    public String getChooseReplacement() {
+        return chooseReplacement.getSelectedItem().toString();
+    }
+
+    public void showErrorMessage(String message) {
+        JOptionPane.showMessageDialog(this, message, "ALERT", JOptionPane.ERROR_MESSAGE);
+    }
 }

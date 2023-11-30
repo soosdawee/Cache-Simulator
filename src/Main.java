@@ -1,4 +1,5 @@
 import controllers.Controller;
+import utils.MemoryUtil;
 import views.CacheView;
 import views.IntroView;
 
@@ -13,7 +14,5 @@ public class Main {
         CacheView cacheView = new CacheView();
 
         Controller controller = new Controller(cacheView, introView);
-
-
     }
 }

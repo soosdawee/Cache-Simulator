@@ -1,14 +1,14 @@
 package models;
 
 public class Block {
-    private final Integer SIZE = 16;
-    private Byte[] content;
+    private  Integer size;
+    private MyByte[] content;
     private Boolean isDirty;
-    private Boolean lru;
+    private Boolean replacement;
 
-    public Block() {
-        this.content = new Byte[SIZE];
+    public Block(Integer size) {
+        this.content = new MyByte[size];
         this.isDirty = false;
-        this.lru = false;
+        this.replacement = false;
     }
 }

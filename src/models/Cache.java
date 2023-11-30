@@ -1,13 +1,23 @@
 package models;
 
-public class Cache {
-    private int numberOfSets;
-    private WriteOperation writeOperation;
-    private Set[] sets;
+import utils.CacheType;
+import utils.ReplacementMechanism;
+import utils.WriteMechanism;
 
-    public Cache(int numberOfSets, WriteOperation writeOperation) {
+public class Cache {
+    private CacheType cacheType;
+    private WriteMechanism writeMechanism;
+    private ReplacementMechanism replacementMechanism;
+    private Integer numberOfSets;
+    private Set[] sets;
+    private Integer blockSize;
+
+    public Cache(CacheType cacheType, WriteMechanism writeMechanism, ReplacementMechanism replacementMechanism, Integer numberOfSets, Integer blockSize) {
         this.numberOfSets = numberOfSets;
-        this.writeOperation = writeOperation;
+        this.writeMechanism = writeMechanism;
         this.sets = new Set[numberOfSets];
+        this.cacheType = cacheType;
+        this.replacementMechanism = replacementMechanism;
+        this.blockSize = blockSize;
     }
 }

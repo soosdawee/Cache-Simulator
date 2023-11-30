@@ -1,10 +1,10 @@
 package models;
 
-public class Byte {
+public class MyByte {
     private Integer address;
-    private String content;
+    private Character content;
 
-    public Byte(Integer address, String content) {
+    public MyByte(Integer address, Character content) {
         this.content = content;
         this.address = address;
     }
@@ -17,11 +17,11 @@ public class Byte {
         this.address = address;
     }
 
-    public String getContent() {
+    public Character getContent() {
         return content;
     }
 
-    public void setContent(String content) {
+    public void setContent(Character content) {
         this.content = content;
     }
 }
