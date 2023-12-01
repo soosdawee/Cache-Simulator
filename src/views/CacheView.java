@@ -6,6 +6,8 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumn;
+import javax.swing.table.TableColumnModel;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.util.Iterator;
@@ -18,7 +20,7 @@ public class CacheView extends JFrame {
     private JTable memoryTable;
     private String[] requestColumns = {"Type", "Address", "Tag", "Set", "Offset"};
     private String[] cacheColumns;
-    private String[] memoryColumns = {"Address", "Data"};
+    private String[] memoryColumns = {"Address", "0", "1", "2", "3", "4", "5", "6", "7"};
     private JButton iterateButton;
     private JLabel nextLabel;
     private JLabel queueLabel;
@@ -78,7 +80,7 @@ public class CacheView extends JFrame {
         }
         cacheTable = new JTable(cacheTableModel);
         JScrollPane cacheScrollPane = new JScrollPane(cacheTable);
-        cacheScrollPane.setBounds(500, 100, 400, 400);
+        cacheScrollPane.setBounds(400, 100, 700, 400);
         cacheScrollPane.setViewportBorder(new EmptyBorder(0, 0, 0, 0));
         cacheScrollPane.setBorder(new LineBorder(new Color(0, 0, 0, 0)));
         this.getContentPane().add(cacheScrollPane);
@@ -88,15 +90,28 @@ public class CacheView extends JFrame {
         memoryTableModel = new DefaultTableModel(null, memoryColumns);
         memoryTable = new JTable(memoryTableModel);
 
-        for (MyByte b : memory) {
-            memoryTableModel.addRow(new Object[]{b.getAddress(), b.getContent()});
+        for (int i = 0; i < 512; i = i + 8) {
+            memoryTableModel.addRow(new Object[]{memory.get(i).getAddress(), memory.get(i).getContent(), memory.get(i+1).getContent(), memory.get(i+2).getContent(),
+                    memory.get(i+3).getContent(), memory.get(i+4).getContent(), memory.get(i+5).getContent(), memory.get(i+6).getContent(),
+                    memory.get(i+7).getContent()});
         }
 
+        TableColumnModel tableColumnModel = memoryTable.getColumnModel();
+        TableColumn column = tableColumnModel.getColumn(0);
+        column.setPreferredWidth(200);
         JScrollPane memoryScrollPane = new JScrollPane(memoryTable);
-        memoryScrollPane.setBounds(1000, 100, 200, 600);
+        memoryScrollPane.setBounds(1200, 100, 300, 600);
         memoryScrollPane.setViewportBorder(new EmptyBorder(0, 0, 0, 0));
         memoryScrollPane.setBorder(new LineBorder(new Color(0, 0, 0, 0)));
         this.getContentPane().add(memoryScrollPane);
+    }
+
+    public void updateCacheTable(Object[][] objects, int rows, int columns) {
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < columns; j++) {
+                cacheTableModel.setValueAt(objects[i][j], i, j);
+            }
+        }
     }
 
     public void addIterateListener(ActionListener actionListener) {

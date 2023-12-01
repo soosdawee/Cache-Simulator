@@ -8,6 +8,7 @@ import views.IntroView;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -62,8 +63,13 @@ public class Controller {
                 } finally {
                     if (cacheSize != null && setNumber != null && blockSize != null) {
                         introView.setVisible(false);
-                        Controller.cache = new Cache(cacheType, writeMechanism, replacementMechanism, setNumber, blockSize);
+                        cache = new Cache(cacheType, cacheSize, writeMechanism, replacementMechanism, setNumber, blockSize);
                         buildTables();
+                        int i = 0;
+                        if (writeMechanism == WriteMechanism.WRITEBACK) {
+                            i = 1;
+                        }
+                        cacheView.updateCacheTable(cache.returnCacheContent(), setNumber * (cacheSize / (setNumber * blockSize)), i + 2 + blockSize);
                         cacheView.setVisible(true);
                     }
                 }
@@ -72,7 +78,15 @@ public class Controller {
     }
 
     private void buildTables () {
-        cacheView.setCacheTable(cacheSize / blockSize, new String[]{replacementMechanism.toString(), "Dirty", "V", "Tag", "Data"});
+        List<String> columns = new ArrayList<>(List.of("Dirty", "V", "Tag"));
+        if (writeMechanism == WriteMechanism.WRITETHROUGH) {
+            columns.remove(0);
+        }
+
+        for (int i = 0; i < blockSize; i++) {
+            columns.add("Data");
+        }
+        cacheView.setCacheTable(cacheSize / blockSize, columns.toArray(new String[0]));
         cacheView.setMemoryTable(memory);
         cacheView.setNextLabel("Executing next: " + toString(controls.get(0)));
         cacheView.setQueueArea(buildQueue());
@@ -101,6 +115,10 @@ public class Controller {
         return stringBuilder.toString();
     }
 
+    public CacheView getCacheView() {
+        return cacheView;
+    }
+
     class IterateListener implements ActionListener {
 
         @Override
@@ -109,17 +127,36 @@ public class Controller {
                 String[] current = controls.remove(0);
                 cacheView.setNextLabel("Executing next: " + Controller.this.toString(controls.get(0)));
                 cacheView.setQueueArea(buildQueue());
+                Integer input = Integer.parseInt(current[1]);
+                Integer tag = input / blockSize;
+                Integer index = tag % blockSize;
+                System.out.println(tag + " " + index);
 
                 switch (current[0]) {
                     case "w" :
-
                         break;
                     case "r":
-                        case 
+                        if(!cache.isHit(tag, index)) {
+                            if (cache.checkIsDirty(tag, index)) {
+                                for (int i = 0; i < blockSize; i++) {
+                                    memory.set(cache.getTag(index) * blockSize + i, cache.getContent(0).get(i));
+                                }
+                            }
+                            List<MyByte> searched = memory.subList(tag * blockSize, tag * blockSize + blockSize);
+                            cache.add(tag, index, searched);
+                            int i = 0;
+                            if (writeMechanism == WriteMechanism.WRITEBACK) {
+                                i = 1;
+                            }
+                            getCacheView().updateCacheTable(cache.returnCacheContent(), setNumber * (cacheSize / (setNumber * blockSize)), i + 2 + blockSize);
+                        }
+                        break;
+                    case "f":
                         break;
                 }
             } catch (IndexOutOfBoundsException ex) {
                 cacheView.showMessage("Hits and all");
+                // ex.printStackTrace();
             }
         }
 

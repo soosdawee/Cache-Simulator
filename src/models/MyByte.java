@@ -9,6 +9,10 @@ public class MyByte {
         this.address = address;
     }
 
+    public MyByte() {
+
+    }
+
     public Integer getAddress() {
         return address;
     }
