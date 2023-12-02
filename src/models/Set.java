@@ -35,7 +35,6 @@ public class Set {
 
     public void printContent() {
         for (Block b : blocks) {
-
             if (b.getContent().get(0).getContent() == null) {
                 System.out.println("null");
             } else {
@@ -52,8 +51,16 @@ public class Set {
         blocks.get(0).addBlock(tag, content);
     }
 
-    public Boolean isDirtyCheck(Integer tag) {
-        return blocks.get(0).getDirty() || blocks.get(0).getWasUsed();
+    public void changeByteDirect(Integer offset, Character changed) {
+        blocks.get(0).changeByte(offset, changed);
+    }
+
+    public void setDirty() {
+        blocks.get(0).setDirty(true);
+    }
+
+    public Boolean isDirtyCheck() {
+        return blocks.get(0).getDirty();
     }
 
     public List<MyByte> getContent() {

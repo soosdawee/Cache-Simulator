@@ -114,6 +114,16 @@ public class CacheView extends JFrame {
         }
     }
 
+    public void updateMemoryTable(List<MyByte> memory, Integer tag, Integer blockSize) {
+        System.out.println("itt");
+        for (int i = tag * blockSize; i < tag * blockSize + blockSize; i++) {
+            Object object = new Object();
+            object = memory.get(i).getContent();
+            System.out.println(memory.get(i).getContent());
+            memoryTableModel.setValueAt(object, i / 8, i % 8 + 1);
+        }
+    }
+
     public void addIterateListener(ActionListener actionListener) {
         iterateButton.addActionListener(actionListener);
     }

@@ -59,8 +59,19 @@ public class Cache {
         }
     }
 
-    public Boolean checkIsDirty(Integer tag, Integer index) {
-        return sets.get(index).isDirtyCheck(tag);
+    public void setDirty(Integer index) {
+        sets.get(index).setDirty();
+    }
+
+    public void changeOneByte(Integer index, Integer offset, Character changed) {
+        switch (cacheType) {
+            case DIRECT:
+                sets.get(index).changeByteDirect(offset, changed);
+        }
+    }
+
+    public Boolean checkIsDirty(Integer index) {
+        return sets.get(index).isDirtyCheck();
     }
 
     public List<MyByte> getContent(Integer index) {

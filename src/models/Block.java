@@ -98,5 +98,10 @@ public class Block {
         this.content = newContent;
         this.v = 1;
         this.wasUsed = true;
+        this.isDirty = false;
+    }
+
+    public void changeByte(Integer offset, Character changed) {
+        content.get(offset).setContent(changed);
     }
 }

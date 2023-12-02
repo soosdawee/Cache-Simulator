@@ -65,11 +65,11 @@ public class Controller {
                         introView.setVisible(false);
                         cache = new Cache(cacheType, cacheSize, writeMechanism, replacementMechanism, setNumber, blockSize);
                         buildTables();
-                        int i = 0;
-                        if (writeMechanism == WriteMechanism.WRITEBACK) {
-                            i = 1;
+                        if (writeMechanism == WriteMechanism.WRITETHROUGH) {
+                            getCacheView().updateCacheTable(cache.returnCacheContent(), setNumber * (cacheSize / (setNumber * blockSize)), 2 + blockSize);
+                        } else {
+                            getCacheView().updateCacheTable(cache.returnCacheContent(), setNumber * (cacheSize / (setNumber * blockSize)), 3 + blockSize);
                         }
-                        cacheView.updateCacheTable(cache.returnCacheContent(), setNumber * (cacheSize / (setNumber * blockSize)), i + 2 + blockSize);
                         cacheView.setVisible(true);
                     }
                 }
@@ -130,26 +130,22 @@ public class Controller {
                 Integer input = Integer.parseInt(current[1]);
                 Integer tag = input / blockSize;
                 Integer index = tag % blockSize;
-                System.out.println(tag + " " + index);
+                Integer offset = input % blockSize;
 
                 switch (current[0]) {
                     case "w" :
+                        readFromMemory(tag, index);
+                        cache.changeOneByte(index, offset, current[2].charAt(0));
+                        if (writeMechanism == WriteMechanism.WRITEBACK) {
+                            cache.setDirty(index);
+                        } else {
+                            cacheView.updateMemoryTable(memory, tag, blockSize);
+                        }
+                        updateTables();
                         break;
                     case "r":
-                        if(!cache.isHit(tag, index)) {
-                            if (cache.checkIsDirty(tag, index)) {
-                                for (int i = 0; i < blockSize; i++) {
-                                    memory.set(cache.getTag(index) * blockSize + i, cache.getContent(0).get(i));
-                                }
-                            }
-                            List<MyByte> searched = memory.subList(tag * blockSize, tag * blockSize + blockSize);
-                            cache.add(tag, index, searched);
-                            int i = 0;
-                            if (writeMechanism == WriteMechanism.WRITEBACK) {
-                                i = 1;
-                            }
-                            getCacheView().updateCacheTable(cache.returnCacheContent(), setNumber * (cacheSize / (setNumber * blockSize)), i + 2 + blockSize);
-                        }
+                        readFromMemory(tag, index);
+                        updateTables();
                         break;
                     case "f":
                         break;
@@ -157,6 +153,30 @@ public class Controller {
             } catch (IndexOutOfBoundsException ex) {
                 cacheView.showMessage("Hits and all");
                 // ex.printStackTrace();
+            }
+        }
+
+        private void readFromMemory(Integer tag, Integer index) {
+            if(!cache.isHit(tag, index)) {
+                if (writeMechanism == WriteMechanism.WRITEBACK) {
+                    if (cache.checkIsDirty(index)) {
+                        for (int i = 0; i < blockSize; i++) {
+                            memory.set(cache.getTag(index) * blockSize + i, cache.getContent(0).get(i));
+                        }
+                        cacheView.updateMemoryTable(memory, cache.getTag(index), blockSize);
+                    }
+                }
+
+                List<MyByte> searched = memory.subList(tag * blockSize, tag * blockSize + blockSize);
+                cache.add(tag, index, searched);
+            }
+        }
+
+        private void updateTables() {
+            if (writeMechanism == WriteMechanism.WRITETHROUGH) {
+                getCacheView().updateCacheTable(cache.returnCacheContent(), setNumber * (cacheSize / (setNumber * blockSize)), 2 + blockSize);
+            } else {
+                getCacheView().updateCacheTable(cache.returnCacheContent(), setNumber * (cacheSize / (setNumber * blockSize)), 3 + blockSize);
             }
         }
 
