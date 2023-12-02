@@ -7,6 +7,7 @@ import utils.WriteMechanism;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 public class Cache {
     private CacheType cacheType;
@@ -16,6 +17,7 @@ public class Cache {
     private Integer numberOfSets;
     private List<Set> sets;
     private Integer blockSize;
+    private static Integer timeStamp = 0;
 
     public Cache(CacheType cacheType, Integer cacheSize, WriteMechanism writeMechanism, ReplacementMechanism replacementMechanism, Integer numberOfSets, Integer blockSize) {
         this.numberOfSets = numberOfSets;
@@ -32,6 +34,14 @@ public class Cache {
         }
     }
 
+    public List<Set> getSets() {
+        return sets;
+    }
+
+    public void setSets(List<Set> sets) {
+        this.sets = sets;
+    }
+
     public void printCacheContent() {
         for (Set s : sets) {
             s.printContent();
@@ -39,15 +49,31 @@ public class Cache {
     }
 
     public Boolean isHit(Integer tag, Integer index){
-        if (sets.get(index).isInSet(tag)) {
-            return true;
-        } else {
-            return false;
+        switch (cacheType) {
+            case DIRECT:
+                if (sets.get(index).isInSet(tag)) {
+                    return true;
+                } else {
+                    return false;
+                }
+            case ASSOCIATIVE:
+                return isHit(tag);
+            default: return false;
         }
     }
 
-    public Boolean isHit(Integer tag){
-        //TODO
+    public void putInCache(Integer tag) {
+        sets.get(0).addBlockDirect(tag, new ArrayList<>());
+    }
+
+    private Boolean isHit(Integer tag){
+        for (Set s : sets) {
+            for (Block b : s.getBlocks()) {
+                if (Objects.equals(b.getTag(), tag)) {
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -56,30 +82,98 @@ public class Cache {
             case DIRECT:
                 sets.get(index).addBlockDirect(tag, content);
                 break;
+            case ASSOCIATIVE:
+                Block block = findEmptySpot();
+
+                if (block == null) {
+                    block = getBlockToModify();
+                }
+
+                block.addBlock(tag, content, timeStamp++);
+                break;
         }
     }
 
-    public void setDirty(Integer index) {
-        sets.get(index).setDirty();
+    private Block findEmptySpot() {
+        for (Set s : sets) {
+            for (Block b : s.getBlocks()) {
+                if (b.getTag() == -1) {
+                    return b;
+                }
+            }
+        }
+        return null;
     }
 
-    public void changeOneByte(Integer index, Integer offset, Character changed) {
+    private Block getBlockToModify() {
+        return sets.get(0).findMinTimeStamp();
+    }
+
+    public Integer getIndexToModify() {
+        return sets.get(0).findMinTimeStampIndex();
+    }
+
+    public void setDirty(Integer index) {
+        if (cacheType == CacheType.DIRECT) {
+            sets.get(index).setDirty();
+        } else {
+            sets.get(0).setDirty(index);
+        }
+
+    }
+
+    public void changeOneByte(Integer index, Integer offset, Character changed, Integer tag) {
         switch (cacheType) {
             case DIRECT:
                 sets.get(index).changeByteDirect(offset, changed);
+                break;
+            case ASSOCIATIVE:
+                if (replacementMechanism == ReplacementMechanism.LRU) {
+                    sets.get(0).changeByteAssociative(tag, offset, changed, timeStamp++);
+                } else {
+                    sets.get(0).changeByteAssociative(tag, offset, changed);
+                }
+
+        }
+    }
+
+    public void flush() {
+        if (writeMechanism == WriteMechanism.WRITEBACK) {
+            for (Set s : sets) {
+                for (Block b : s.getBlocks()) {
+                    b.makeNull();
+                }
+            }
         }
     }
 
     public Boolean checkIsDirty(Integer index) {
-        return sets.get(index).isDirtyCheck();
+        if (cacheType == CacheType.DIRECT) {
+            return sets.get(index).isDirtyCheck();
+        } else {
+            return sets.get(0).isDirtyCheck(index);
+        }
+
     }
 
     public List<MyByte> getContent(Integer index) {
-        return sets.get(index).getContent();
+        if (cacheType == CacheType.DIRECT) {
+            return sets.get(index).getContent();
+        } else {
+            return sets.get(0).getContent(index);
+        }
     }
 
     public Integer getTag(Integer index) {
-        return sets.get(index).getTag();
+        if (cacheType == CacheType.DIRECT) {
+            return sets.get(index).getTag();
+        } else {
+            return sets.get(0).getTag(index);
+        }
+    }
+
+    public Integer getTagByIndex(Integer tag) {
+        return sets.get(0).findIndexByTag(tag);
     }
 
     public Object[][] returnCacheContent() {

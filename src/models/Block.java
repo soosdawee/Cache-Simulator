@@ -10,6 +10,7 @@ public class Block {
     private List<MyByte> content;
     private Boolean isDirty;
     private Boolean wasUsed;
+    private Integer timeStamp;
 
     public Block(Integer size) {
         this.size = size;
@@ -22,6 +23,23 @@ public class Block {
         this.v = -1;
         this.isDirty = false;
         this.wasUsed = false;
+        this.timeStamp = -1;
+    }
+
+    public Block() {
+        this.tag = -1;
+        this.v = -1;
+        this.isDirty = false;
+        this.wasUsed = false;
+        this.timeStamp = 100000000;
+    }
+
+    public Integer getTimeStamp() {
+        return timeStamp;
+    }
+
+    public void setTimeStamp(Integer timeStamp) {
+        this.timeStamp = timeStamp;
     }
 
     public Integer getSize() {
@@ -101,7 +119,32 @@ public class Block {
         this.isDirty = false;
     }
 
+    public void addBlock(Integer tag, List<MyByte> content, Integer timeStamp) {
+        this.tag = tag;
+        this.content = content;
+        this.v = 1;
+        this.wasUsed = true;
+        this.isDirty = false;
+        this.timeStamp = timeStamp;
+    }
+
+    public void changeByte(Integer offset, Character changed, Integer timeStamp) {
+        content.get(offset).setContent(changed);
+        this.timeStamp = timeStamp;
+    }
+
     public void changeByte(Integer offset, Character changed) {
         content.get(offset).setContent(changed);
+    }
+
+    public void makeNull() {
+        this.tag = -1;
+        this.v = -1;
+        this.isDirty = false;
+        this.wasUsed = false;
+        this.timeStamp = -1;
+        for (MyByte b : content) {
+            b.setContent(null);
+        }
     }
 }

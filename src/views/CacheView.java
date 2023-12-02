@@ -6,6 +6,7 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 import java.awt.*;
@@ -71,14 +72,59 @@ public class CacheView extends JFrame {
         queueArea.setText(string);
     }
 
-    public void setCacheTable(Integer size, String[] cacheColumns) {
+    public void setCacheTable(Integer size, String[] cacheColumns, Integer numberOfSets, Integer numberOfBlocks, Integer cacheSize) {
         this.cacheColumns = cacheColumns;
         cacheTableModel = new DefaultTableModel(null, cacheColumns);
+        boolean color = false;
+        int count = 0;
+        int[] myArray = new int[size / 2];
+        for (int i = 0; i < size/2; i++) {
+            myArray[i] = -1;
+        }
+        int iterator = 0;
         for (int i = 0; i < size; i++) {
+            if (count == cacheSize / (numberOfBlocks * numberOfSets)) {
+                System.out.println(count);
+                if (!color) {
+                    color = true;
+                } else {
+                    color = false;
+                }
+                count = 0;
+            }
+            if (color) {
+                myArray[iterator++] = i;
+            }
+            count++;
+
             Object[] data = {"", "", "", "", "", ""};
             cacheTableModel.addRow(data);
         }
-        cacheTable = new JTable(cacheTableModel);
+
+        cacheTable = new JTable(cacheTableModel) {
+            private static final Color EVEN_ROW_COLOR = new Color(240, 240, 240);
+            private static final Color TARGET_ROW_COLOR = new Color(173, 216, 230); // Light blue
+
+            @Override
+            public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
+                Component component = super.prepareRenderer(renderer, row, column);
+
+                boolean present = false;
+                for (int i = 0; i < size / 2; i++) {
+                    if (row == myArray[i]) {
+                        present = true;
+                        break;
+                    }
+                }
+                if (present) {
+                    component.setBackground(TARGET_ROW_COLOR);
+                } else {
+                    component.setBackground(getBackground());
+                }
+
+                return component;
+            }
+        };
         JScrollPane cacheScrollPane = new JScrollPane(cacheTable);
         cacheScrollPane.setBounds(400, 100, 700, 400);
         cacheScrollPane.setViewportBorder(new EmptyBorder(0, 0, 0, 0));
@@ -115,11 +161,9 @@ public class CacheView extends JFrame {
     }
 
     public void updateMemoryTable(List<MyByte> memory, Integer tag, Integer blockSize) {
-        System.out.println("itt");
         for (int i = tag * blockSize; i < tag * blockSize + blockSize; i++) {
             Object object = new Object();
             object = memory.get(i).getContent();
-            System.out.println(memory.get(i).getContent());
             memoryTableModel.setValueAt(object, i / 8, i % 8 + 1);
         }
     }
