@@ -58,12 +58,14 @@ public class Cache {
                 }
             case ASSOCIATIVE:
                 return isHit(tag);
+            case SETASSOCIATIVE:
+                return sets.get(index).isInSet(tag);
             default: return false;
         }
     }
 
     public void putInCache(Integer tag) {
-        sets.get(0).addBlockDirect(tag, new ArrayList<>());
+        sets.get(1).addBlockDirect(tag, new ArrayList<>());
     }
 
     private Boolean isHit(Integer tag){
@@ -75,6 +77,16 @@ public class Cache {
             }
         }
         return false;
+    }
+
+    public void modifyTimeStamp(Integer tag, Integer index) {
+        for (Set s : sets) {
+            for (Block b : s.getBlocks()) {
+                if (Objects.equals(b.getTag(), tag)) {
+                    b.changeTimeStamp(timeStamp);
+                }
+            }
+        }
     }
 
     public void add(Integer tag, Integer index, List<MyByte> content) {
@@ -91,6 +103,15 @@ public class Cache {
 
                 block.addBlock(tag, content, timeStamp++);
                 break;
+            case SETASSOCIATIVE:
+                Block b = findParticularEmptySpot(index);
+
+                if (b == null) {
+                    b = getBlockToModify(index);
+                }
+
+                b.addBlock(tag, content, timeStamp++);
+                break;
         }
     }
 
@@ -105,8 +126,21 @@ public class Cache {
         return null;
     }
 
+    private Block findParticularEmptySpot(Integer index) {
+        for (Block b : sets.get(index).getBlocks()) {
+            if (b.getTag() == -1) {
+                return b;
+            }
+        }
+        return null;
+    }
+
     private Block getBlockToModify() {
         return sets.get(0).findMinTimeStamp();
+    }
+
+    public Block getBlockToModify(Integer index) {
+        return sets.get(index).findMinTimeStamp();
     }
 
     public Integer getIndexToModify() {
@@ -119,7 +153,10 @@ public class Cache {
         } else {
             sets.get(0).setDirty(index);
         }
+    }
 
+    public void setDirty(Integer index, Integer blockIndex) {
+        sets.get(index).setDirty(blockIndex);
     }
 
     public void changeOneByte(Integer index, Integer offset, Character changed, Integer tag) {
@@ -133,7 +170,14 @@ public class Cache {
                 } else {
                     sets.get(0).changeByteAssociative(tag, offset, changed);
                 }
-
+                break;
+            case SETASSOCIATIVE:
+                if (replacementMechanism == ReplacementMechanism.LRU) {
+                    sets.get(index).changeByteAssociative(tag, offset, changed, timeStamp++);
+                } else {
+                    sets.get(index).changeByteAssociative(tag, offset, changed);
+                }
+                break;
         }
     }
 
@@ -172,8 +216,20 @@ public class Cache {
         }
     }
 
+    public Integer getTag(Integer index, Integer blockIndex) {
+        if (cacheType == CacheType.DIRECT) {
+            return sets.get(index).getTag();
+        } else {
+            return sets.get(index).getTag(blockIndex);
+        }
+    }
+
     public Integer getTagByIndex(Integer tag) {
         return sets.get(0).findIndexByTag(tag);
+    }
+
+    public Integer getTagByIndex(Integer tag, Integer index) {
+        return sets.get(index).findIndexByTag(tag);
     }
 
     public Object[][] returnCacheContent() {
@@ -209,5 +265,14 @@ public class Cache {
             System.out.println(objects[i]);
         }
         System.out.println(" ");
+    }
+
+    public Block getBlockToCheck(Integer tag, Integer index) {
+        for (Block b : sets.get(index).getBlocks()) {
+            if (b.getTag().equals(tag)) {
+                return b;
+            }
+        }
+        return null;
     }
 }

@@ -128,6 +128,10 @@ public class Block {
         this.timeStamp = timeStamp;
     }
 
+    public void changeTimeStamp(Integer timeStamp) {
+        this.timeStamp = timeStamp;
+    }
+
     public void changeByte(Integer offset, Character changed, Integer timeStamp) {
         content.get(offset).setContent(changed);
         this.timeStamp = timeStamp;

@@ -26,6 +26,8 @@ public class Controller {
     Integer setNumber;
     Integer blockSize;
     private static Cache cache;
+    Integer hits = 0;
+    Integer totalAccesses = 0;
 
     public Controller (CacheView cacheView, IntroView introView) {
         this.cacheView = cacheView;
@@ -144,13 +146,22 @@ public class Controller {
                             } else {
                                 cacheView.updateMemoryTable(memory, tag, blockSize);
                             }
-                        } else {
+                        } else if (cacheType == CacheType.ASSOCIATIVE ){
                             readFromMemoryAssociative(tag, index);
                             index = cache.getTagByIndex(tag);
-                            System.out.println(index);
                             cache.changeOneByte(index, offset, current[2].charAt(0), tag);
                             if (writeMechanism == WriteMechanism.WRITEBACK) {
                                 cache.setDirty(index);
+                            } else {
+                                cacheView.updateMemoryTable(memory, tag, blockSize);
+                            }
+                        } else {
+                            index = tag % setNumber;
+                            readFromMemorySetAssociative(tag, index);
+                            Integer blockIndex = cache.getTagByIndex(tag, index);
+                            cache.changeOneByte(index, offset, current[2].charAt(0), tag);
+                            if (writeMechanism == WriteMechanism.WRITEBACK) {
+                                cache.setDirty(index, blockIndex);
                             } else {
                                 cacheView.updateMemoryTable(memory, tag, blockSize);
                             }
@@ -160,8 +171,11 @@ public class Controller {
                     case "r":
                         if (cacheType == CacheType.DIRECT) {
                             readFromMemory(tag, index);
-                        } else {
+                        } else if (cacheType == CacheType.ASSOCIATIVE){
                             readFromMemoryAssociative(tag , index);
+                        } else {
+                            index = tag % setNumber;
+                            readFromMemorySetAssociative(tag, index);
                         }
                         updateTables();
                         break;
@@ -182,7 +196,7 @@ public class Controller {
                         break;
                 }
             } catch (IndexOutOfBoundsException ex) {
-                //cacheView.showMessage("Hits and all");
+                cacheView.showMessage("End of simulation!");
                 ex.printStackTrace();
             }
         }
@@ -216,6 +230,37 @@ public class Controller {
                 }
                 List<MyByte> searched = memory.subList(tag * blockSize, tag * blockSize + blockSize);
                 cache.add(tag, index, searched);
+            } else {
+                if (replacementMechanism == ReplacementMechanism.LRU) {
+                    cache.modifyTimeStamp(tag, index);
+                }
+            }
+        }
+
+        private void readFromMemorySetAssociative(Integer tag, Integer index) {
+            if(!cache.isHit(tag, index)) {
+                if (writeMechanism == WriteMechanism.WRITEBACK) {
+                    System.out.println("Searching for " + tag + " in " + index);
+                    Block block = cache.getBlockToModify(index);
+                    if (block == null) {
+                        System.out.println("created new block");
+                        block = new Block(blockSize);
+                    }
+                    System.out.println(block.getDirty());
+                    if (block.getDirty()) {
+                        for (int i = 0; i < blockSize; i++) {
+                            System.out.println(i + " " + (block.getTag() * blockSize + i));
+                            memory.set(block.getTag() * blockSize + i, block.getContent().get(i));
+                        }
+                        cacheView.updateMemoryTable(memory, block.getTag(), blockSize);
+                    }
+                }
+                List<MyByte> searched = memory.subList(tag * blockSize, tag * blockSize + blockSize);
+                cache.add(tag, index, searched);
+            } else {
+                if (replacementMechanism == ReplacementMechanism.LRU) {
+                    cache.modifyTimeStamp(tag, index);
+                }
             }
         }
 
