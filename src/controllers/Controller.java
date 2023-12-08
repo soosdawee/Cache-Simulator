@@ -10,6 +10,7 @@ import views.IntroView;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.net.http.WebSocketHandshakeException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +29,7 @@ public class Controller {
     private static Cache cache;
     Integer hits = 0;
     Integer totalAccesses = 0;
+    String inputName;
 
     public Controller (CacheView cacheView, IntroView introView) {
         this.cacheView = cacheView;
@@ -39,10 +41,15 @@ public class Controller {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    controls = Parser.parseFile("input.txt");
+                    inputName = introView.getInputField();
+                    controls = Parser.parseFile(inputName);
                     cacheSize = introView.getCacheSize();
                     setNumber = introView.getSetNumber();
                     blockSize = introView.getBlockSize();
+
+                    if (cacheSize % (blockSize * setNumber) != 0) {
+                        throw new UnusableInputException("The data isnt right!");
+                    }
 
                     if (setNumber == 1) {
                         cacheType = CacheType.ASSOCIATIVE;
@@ -64,6 +71,10 @@ public class Controller {
                 } catch (NumberFormatException exception) {
                     introView.showErrorMessage("Please give every detail!");
                     introView.setVisible(true);
+                } catch (UnusableInputException ex) {
+                    introView.showErrorMessage(ex.getMessage());
+                    introView.setVisible(true);
+                    cacheView.setVisible(false);
                 } finally {
                     if (cacheSize != null && setNumber != null && blockSize != null) {
                         introView.setVisible(false);

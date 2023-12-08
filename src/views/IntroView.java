@@ -13,6 +13,7 @@ public class IntroView extends JFrame {
     private JComboBox<String> chooseReplacement;
     String[] comboOptions = {"Write-through", "Write-back"};
     String[] comboReplacement = {"FIFO", "LRU"};
+    private JTextField inputField;
 
     public IntroView() {
         this.setBounds(100, 100, 500, 550);
@@ -43,7 +44,7 @@ public class IntroView extends JFrame {
 
         startButton = new JButton("Start simulation");
         startButton.setFont(new Font("Tahoma", Font.PLAIN, 12));
-        startButton.setBounds(175, 395, 150, 21);
+        startButton.setBounds(175, 450, 150, 21);
         this.getContentPane().add(startButton);
 
         setNumber = new JTextField();
@@ -91,6 +92,15 @@ public class IntroView extends JFrame {
         chooseReplacement.setBounds(190, 345, 125, 25);
         this.getContentPane().add(chooseReplacement);
 
+        JLabel inputLabel = new JLabel("Place to get input from");
+        inputLabel.setFont(new Font("Tahoma", Font.PLAIN, 12));
+        inputLabel.setBounds(190, 370, 200, 40);
+        this.getContentPane().add(inputLabel);
+
+        inputField = new JTextField();
+        inputField.setBounds(173, 415, 150, 21);
+        this.getContentPane().add(inputField);
+
         this.setVisible(true);
     }
 
@@ -116,6 +126,10 @@ public class IntroView extends JFrame {
 
     public String getChooseReplacement() {
         return chooseReplacement.getSelectedItem().toString();
+    }
+
+    public String getInputField() {
+        return inputField.getText();
     }
 
     public void showErrorMessage(String message) {
