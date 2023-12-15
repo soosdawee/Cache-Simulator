@@ -247,6 +247,22 @@ public class Cache {
         return objects;
     }
 
+    public Object[][] returnCacheContentEveryColumns() {
+        Object[][] objects = new Object[numberOfSets * (cacheSize / (numberOfSets * blockSize))+3][3 + blockSize];
+        int i = 0;
+        for (Set s : sets) {
+            int j = 0;
+            for (Block b : s.getBlocks()) {
+                objects[i++] = s.returnContent(j++);
+            }
+        }
+        if (writeMechanism == WriteMechanism.WRITETHROUGH) {
+            objects = removeFirstColumn(objects);
+        }
+        return objects;
+    }
+
+
     private static Object[][] removeFirstColumn(Object[][] inputArray) {
         int numRows = inputArray.length;
         int numCols = inputArray[0].length - 1; // Reduced by 1 for the removed column

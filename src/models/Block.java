@@ -54,6 +54,10 @@ public class Block {
         return tag;
     }
 
+    public Integer getV() {
+        return v;
+    }
+
     public void setTag(Integer tag) {
         this.tag = tag;
     }

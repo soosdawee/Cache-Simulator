@@ -11,6 +11,7 @@ import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 import java.awt.*;
 import java.awt.event.ActionListener;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -26,27 +27,35 @@ public class CacheView extends JFrame {
     private JLabel nextLabel;
     private JLabel queueLabel;
     private JTextArea queueArea;
+    private JTextArea specsArea;
 
     public CacheView() {
-        this.setBounds(25, 25, 1500, 800);
+        this.setBounds(0, 0, 1600, 1000);
         this.setDefaultCloseOperation(EXIT_ON_CLOSE);
         this.getContentPane().setLayout(null);
 
-        JLabel cacheLabel = new JLabel("The cache:");
-        cacheLabel.setFont(new Font("Tahoma",Font.PLAIN, 18));
-        cacheLabel.setBounds(650, 80, 300, 20);
-        this.getContentPane().add(cacheLabel);
-
         nextLabel = new JLabel();
         nextLabel.setFont(new Font("Tahoma",Font.PLAIN, 25));
-        nextLabel.setBounds(100, 100, 300, 30);
+        nextLabel.setBounds(15, 100, 300, 30);
         this.getContentPane().add(nextLabel);
+
+        queueLabel = new JLabel("Queued up: ");
+        queueLabel.setFont(new Font("Tahoma",Font.PLAIN, 22));
+        queueLabel.setBounds(15, 135, 300, 29);
+        this.getContentPane().add(queueLabel);
 
         queueArea = new JTextArea("Al a");
         queueArea.setFont(new Font("Tahoma",Font.PLAIN, 20));
-        queueArea.setBounds(100, 150, 300, 400);
         queueArea.setOpaque(false);
-        this.getContentPane().add(queueArea);
+        JScrollPane scrollPane = new JScrollPane(queueArea);
+        scrollPane.setBounds(15, 175, 200, 375);
+        this.getContentPane().add(scrollPane);
+
+        specsArea = new JTextArea("Al a");
+        specsArea.setFont(new Font("Tahoma",Font.PLAIN, 16));
+        specsArea.setBounds(15, 575, 250, 400);
+        specsArea.setOpaque(false);
+        this.getContentPane().add(specsArea);
 
         iterateButton = new JButton("Iterate");
         iterateButton.setFont(new Font("Tahoma", Font.PLAIN, 12));
@@ -72,6 +81,10 @@ public class CacheView extends JFrame {
         queueArea.setText(string);
     }
 
+    public void setSpecsArea(String string) {
+        specsArea.setText(string);
+    }
+
     public void setCacheTable(Integer size, String[] cacheColumns, Integer numberOfSets, Integer numberOfBlocks, Integer cacheSize) {
         this.cacheColumns = cacheColumns;
         cacheTableModel = new DefaultTableModel(null, cacheColumns);
@@ -84,7 +97,6 @@ public class CacheView extends JFrame {
         int iterator = 0;
         for (int i = 0; i < size; i++) {
             if (count == cacheSize / (numberOfBlocks * numberOfSets)) {
-                System.out.println(count);
                 if (!color) {
                     color = true;
                 } else {
@@ -126,7 +138,7 @@ public class CacheView extends JFrame {
             }
         };
         JScrollPane cacheScrollPane = new JScrollPane(cacheTable);
-        cacheScrollPane.setBounds(400, 100, 700, 400);
+        cacheScrollPane.setBounds(350, 100, 800, 600);
         cacheScrollPane.setViewportBorder(new EmptyBorder(0, 0, 0, 0));
         cacheScrollPane.setBorder(new LineBorder(new Color(0, 0, 0, 0)));
         this.getContentPane().add(cacheScrollPane);
@@ -146,7 +158,7 @@ public class CacheView extends JFrame {
         TableColumn column = tableColumnModel.getColumn(0);
         column.setPreferredWidth(200);
         JScrollPane memoryScrollPane = new JScrollPane(memoryTable);
-        memoryScrollPane.setBounds(1200, 100, 300, 600);
+        memoryScrollPane.setBounds(1225, 100, 300, 600);
         memoryScrollPane.setViewportBorder(new EmptyBorder(0, 0, 0, 0));
         memoryScrollPane.setBorder(new LineBorder(new Color(0, 0, 0, 0)));
         this.getContentPane().add(memoryScrollPane);
@@ -157,6 +169,7 @@ public class CacheView extends JFrame {
             for (int j = 0; j < columns; j++) {
                 cacheTableModel.setValueAt(objects[i][j], i, j);
             }
+            System.out.println(Arrays.toString(objects[i]));
         }
     }
 

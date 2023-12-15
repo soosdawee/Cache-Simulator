@@ -10,6 +10,8 @@ import views.IntroView;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.http.WebSocketHandshakeException;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,8 +29,6 @@ public class Controller {
     Integer setNumber;
     Integer blockSize;
     private static Cache cache;
-    Integer hits = 0;
-    Integer totalAccesses = 0;
     String inputName;
 
     public Controller (CacheView cacheView, IntroView introView) {
@@ -41,15 +41,22 @@ public class Controller {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    inputName = introView.getInputField();
-                    controls = Parser.parseFile(inputName);
                     cacheSize = introView.getCacheSize();
                     setNumber = introView.getSetNumber();
                     blockSize = introView.getBlockSize();
+                    inputName = introView.getInputField();
 
-                    if (cacheSize % (blockSize * setNumber) != 0) {
+                    if (cacheSize < 0 || setNumber < 0 || blockSize < 0) {
+                        throw new UnusableInputException("The simulation cannot proceed with negative numbers!");
+                    } else if (cacheSize < 1 || setNumber < 1 || blockSize < 1) {
+                        throw new UnusableInputException("Zero as input is inadmissible!");
+                    } else if (cacheSize % (blockSize * setNumber) != 0) {
                         throw new UnusableInputException("The data isnt right!");
+                    } else if (cacheSize >= 512) {
+                        throw new UnusableInputException("The size of the memory is fixed at 512 bytes, therefore the size of your cache should be smaller!");
                     }
+
+                    controls = Parser.parseFile(inputName);
 
                     if (setNumber == 1) {
                         cacheType = CacheType.ASSOCIATIVE;
@@ -68,25 +75,35 @@ public class Controller {
                     } else {
                         replacementMechanism = ReplacementMechanism.FIFO;
                     }
+                    cacheView.setSpecsArea(createSpecsArea());
+                    System.out.println("Cache size: " + cacheSize + " nr of sets: " + setNumber + " blocks size: " + blockSize);
                 } catch (NumberFormatException exception) {
-                    introView.showErrorMessage("Please give every detail!");
-                    introView.setVisible(true);
+                    introView.showErrorMessage("Please complete the text fields with numbers!");
+                    return;
                 } catch (UnusableInputException ex) {
                     introView.showErrorMessage(ex.getMessage());
-                    introView.setVisible(true);
-                    cacheView.setVisible(false);
-                } finally {
-                    if (cacheSize != null && setNumber != null && blockSize != null) {
-                        introView.setVisible(false);
-                        cache = new Cache(cacheType, cacheSize, writeMechanism, replacementMechanism, setNumber, blockSize);
-                        buildTables();
-                        if (writeMechanism == WriteMechanism.WRITETHROUGH) {
-                            getCacheView().updateCacheTable(cache.returnCacheContent(), setNumber * (cacheSize / (setNumber * blockSize)), 2 + blockSize);
-                        } else {
-                            getCacheView().updateCacheTable(cache.returnCacheContent(), setNumber * (cacheSize / (setNumber * blockSize)), 3 + blockSize);
-                        }
-                        cacheView.setVisible(true);
+                    return;
+                } catch(IndexOutOfBoundsException except) {
+                    except.printStackTrace();
+                    return;
+                }  catch(FileNotFoundException exep) {
+                    introView.showErrorMessage("File not found!");
+                    return;
+                }catch (IOException io) {
+                    introView.showErrorMessage("Problem with the input file!");
+                    return;
+                }
+
+                if (cacheSize != null && setNumber != null && blockSize != null) {
+                    introView.setVisible(false);
+                    cache = new Cache(cacheType, cacheSize, writeMechanism, replacementMechanism, setNumber, blockSize);
+                    buildTables();
+                    if (writeMechanism == WriteMechanism.WRITETHROUGH) {
+                        getCacheView().updateCacheTable(cache.returnCacheContent(), setNumber * (cacheSize / (setNumber * blockSize)), 2 + blockSize);
+                    } else {
+                        getCacheView().updateCacheTable(cache.returnCacheContent(), setNumber * (cacheSize / (setNumber * blockSize)), 3 + blockSize);
                     }
+                    cacheView.setVisible(true);
                 }
             }
         });
@@ -97,9 +114,9 @@ public class Controller {
         if (writeMechanism == WriteMechanism.WRITETHROUGH) {
             columns.remove(0);
         }
-
+        int j = 0;
         for (int i = 0; i < blockSize; i++) {
-            columns.add("Data");
+            columns.add(Integer.toString(j++));
         }
         cacheView.setCacheTable(cacheSize / blockSize, columns.toArray(new String[0]), setNumber, blockSize, cacheSize);
         cacheView.setMemoryTable(memory);
@@ -117,9 +134,39 @@ public class Controller {
         return stringBuilder.toString();
     }
 
+    private String createSpecsArea() {
+        StringBuilder stringBuilder = new StringBuilder();
+
+        stringBuilder.append("SPECIFICATIONS\nType of cache: ");
+
+        switch (cacheType) {
+            case DIRECT -> stringBuilder.append("Direct-Mapped\nSize of cache: ");
+            case SETASSOCIATIVE -> stringBuilder.append("Set-Associative\nSize of cache: ");
+            case ASSOCIATIVE -> stringBuilder.append("Fully-Associative\nSize of cache: ");
+        }
+
+        stringBuilder.append(cacheSize);
+        stringBuilder.append("\nSize of blocks: ");
+        stringBuilder.append(blockSize);
+        stringBuilder.append("\nNumber of sets: ");
+        stringBuilder.append(setNumber);
+        stringBuilder.append("\nWrite mechanism: ");
+
+        switch (writeMechanism) {
+            case WRITEBACK -> stringBuilder.append("Write-Back\nReplacement method: ");
+            case WRITETHROUGH -> stringBuilder.append("Write-Through\nReplacement method: ");
+        }
+
+        switch (replacementMechanism) {
+            case FIFO -> stringBuilder.append("FIFO");
+            case LRU -> stringBuilder.append("LRU");
+        }
+
+        return stringBuilder.toString();
+    }
+
     private String buildQueue() {
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("Queued up:\n");
 
         for (String[] s : controls) {
             if (s != controls.get(0)) {
@@ -144,12 +191,14 @@ public class Controller {
                 cacheView.setQueueArea(buildQueue());
                 Integer input = Integer.parseInt(current[1]);
                 Integer tag = input / blockSize;
-                Integer index = tag % blockSize;
+                Integer index = tag % setNumber;
                 Integer offset = input % blockSize;
+                System.out.println("Tag: " + tag    );
 
                 switch (current[0]) {
                     case "w" :
                         if (cacheType == CacheType.DIRECT) {
+                            System.out.println(tag + " " + index);
                             readFromMemory(tag, index);
                             cache.changeOneByte(index, offset, current[2].charAt(0), tag);
                             if (writeMechanism == WriteMechanism.WRITEBACK) {
@@ -190,25 +239,9 @@ public class Controller {
                         }
                         updateTables();
                         break;
-                    case "flush":
-                        for (Set s : cache.getSets()) {
-                            for (Block b : s.getBlocks()) {
-                                if (b.getTag() != -1) {
-                                    for (int i = 0; i < blockSize; i++) {
-                                        memory.set(b.getTag() * blockSize + i, b.getContent().get(i));
-                                    }
-                                    cacheView.updateMemoryTable(memory, b.getTag(), blockSize);
-                                    b.makeNull();
-                                    updateTables();
-                                }
-                            }
-                        }
-
-                        break;
                 }
             } catch (IndexOutOfBoundsException ex) {
                 cacheView.showMessage("End of simulation!");
-                ex.printStackTrace();
             }
         }
 
@@ -217,12 +250,14 @@ public class Controller {
                 if (writeMechanism == WriteMechanism.WRITEBACK) {
                     if (cache.checkIsDirty(index)) {
                         for (int i = 0; i < blockSize; i++) {
-                            memory.set(cache.getTag(index) * blockSize + i, cache.getContent(0).get(i));
+                            System.out.println("Got content " + i + " " + cache.getContent(0).get(i).getContent());
+                            memory.set(cache.getTag(index) * blockSize + i, cache.getContent(index).get(i));
                         }
                         cacheView.updateMemoryTable(memory, cache.getTag(index), blockSize);
                     }
                 }
                 List<MyByte> searched = memory.subList(tag * blockSize, tag * blockSize + blockSize);
+                System.out.println("Searched: " + searched + " tag: " + tag + " index " + index);
                 cache.add(tag, index, searched);
             }
         }
